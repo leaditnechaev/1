@@ -99,15 +99,17 @@ export function ChatShell() {
                 {error}
               </p>
             ) : null}
-            <ChatInput
-              value={inputValue}
-              inputType={activeStep?.inputType || "text"}
-              disabled={!activeStep || isTyping || isSubmitting}
-              isSubmitting={isSubmitting}
-              placeholder={placeholder}
-              onChange={setInputValue}
-              onSubmit={handleSubmit}
-            />
+            {activeStep?.inputType === "phone" ? (
+              <ChatInput
+                value={inputValue}
+                inputType={activeStep.inputType}
+                disabled={isTyping || isSubmitting}
+                isSubmitting={isSubmitting}
+                placeholder={placeholder}
+                onChange={setInputValue}
+                onSubmit={handleSubmit}
+              />
+            ) : null}
           </div>
         ) : null}
       </div>
