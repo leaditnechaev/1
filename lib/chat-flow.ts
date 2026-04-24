@@ -29,8 +29,7 @@ export const CHAT_STEPS: ChatStepConfig[] = [
       "Евротрешка",
       "Четырехкомнатная",
       "Другая планировка"
-    ],
-    acceptsFreeText: true
+    ]
   },
   {
     id: "purchase",
