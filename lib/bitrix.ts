@@ -25,24 +25,11 @@ function getBitrixEndpoint(): string {
   return `${webhookUrl.replace(/\/+$/, "")}/crm.lead.add.json`;
 }
 
-function addCustomField(
-  fields: BitrixLeadFields,
-  envName: string,
-  value: string
-) {
-  const fieldCode = process.env[envName]?.trim();
-
-  if (fieldCode) {
-    fields[fieldCode] = value;
-  }
-}
-
 function buildLeadFields(payload: LeadPayload): BitrixLeadFields {
-  const { answers, metadata } = payload;
-  const assignedById = process.env.BITRIX_ASSIGNED_BY_ID;
+  const { answers } = payload;
+  const assignedById = process.env.BITRIX_ASSIGNED_BY_ID?.trim();
   const fields: BitrixLeadFields = {
-    TITLE: `Заявка с чат-лендинга Формула: ${answers.need}`,
-    NAME: answers.name === "Не указано" ? "Клиент" : answers.name,
+    TITLE: "Заявка с чат-лендинга Формула",
     PHONE: [
       {
         VALUE: answers.phone,
@@ -52,26 +39,14 @@ function buildLeadFields(payload: LeadPayload): BitrixLeadFields {
     SOURCE_ID: process.env.BITRIX_SOURCE_ID || "WEB",
     SOURCE_DESCRIPTION: "Чат-лендинг Формула",
     COMMENTS: formatLeadForBitrixComments(payload),
-    UTM_SOURCE: metadata.utm_source,
-    UTM_MEDIUM: metadata.utm_medium,
-    UTM_CAMPAIGN: metadata.utm_campaign,
-    UTM_CONTENT: metadata.utm_content,
-    UTM_TERM: metadata.utm_term
+    UTM_SOURCE: "avito",
+    UTM_MEDIUM: "chat",
+    UTM_CAMPAIGN: "frml"
   };
 
   if (assignedById) {
     fields.ASSIGNED_BY_ID = Number(assignedById);
   }
-
-  addCustomField(fields, "BITRIX_FIELD_LAYOUT", answers.need);
-  addCustomField(fields, "BITRIX_FIELD_PURCHASE_METHOD", answers.purchaseMethod);
-  addCustomField(fields, "BITRIX_FIELD_BUDGET", answers.budget);
-  addCustomField(fields, "BITRIX_FIELD_CONTACT_METHOD", answers.contactMethod);
-  addCustomField(fields, "BITRIX_FIELD_GCLID", metadata.gclid || "");
-  addCustomField(fields, "BITRIX_FIELD_YCLID", metadata.yclid || "");
-  addCustomField(fields, "BITRIX_FIELD_REFERRER", metadata.referrer);
-  addCustomField(fields, "BITRIX_FIELD_LANDING_PATH", metadata.path);
-  addCustomField(fields, "BITRIX_FIELD_USER_AGENT", metadata.userAgent);
 
   return fields;
 }
