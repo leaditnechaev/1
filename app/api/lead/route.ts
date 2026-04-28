@@ -7,6 +7,30 @@ import { leadRequestSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
+function getErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return "Не удалось отправить заявку.";
+  }
+
+  if (error.message.includes("BITRIX_WEBHOOK_URL")) {
+    return "В Netlify не настроена переменная BITRIX_WEBHOOK_URL.";
+  }
+
+  if (error.message.includes("401")) {
+    return "Bitrix отклонил запрос. Проверьте вебхук и права CRM.";
+  }
+
+  if (error.message.includes("403")) {
+    return "Bitrix запретил доступ. Проверьте права вебхука.";
+  }
+
+  if (error.message.includes("404")) {
+    return "Bitrix webhook URL указан неверно.";
+  }
+
+  return error.message || "Не удалось отправить заявку.";
+}
+
 export async function POST(request: Request) {
   const ip = getClientIp(request.headers);
 
@@ -22,7 +46,7 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Проверьте телефон и ответы." },
+      { error: "Проверьте номер телефона и ответы в анкете." },
       { status: 400 }
     );
   }
@@ -33,7 +57,7 @@ export async function POST(request: Request) {
 
   if (Date.now() - parsed.data.startedAt < 2500) {
     return NextResponse.json(
-      { error: "Слишком быстрая отправка." },
+      { error: "Слишком быстрая отправка. Попробуйте еще раз." },
       { status: 400 }
     );
   }
@@ -47,10 +71,9 @@ export async function POST(request: Request) {
     const delivery = await deliverLeadToBitrix(payload);
     return NextResponse.json({ ok: true, delivery });
   } catch (error) {
+    const message = getErrorMessage(error);
     console.error(error);
-    return NextResponse.json(
-      { error: "Не удалось отправить заявку." },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
